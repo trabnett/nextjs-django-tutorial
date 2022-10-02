@@ -40,10 +40,38 @@ def register(request):
   else:
     return Response(user.errors)
 
+def go(request):
+  return Response({'hey': 'you'})
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
+  user = request.user
 
-  user = UserSerializer(request.user)
+  serializer = UserSerializer(user, many=False)
 
-  return Response(user.data)
+  return Response(serializer.data)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_user(request):
+  user = request.user
+
+  serializer = UserSerializer(user, many=False)
+
+  data = request.data
+
+  user.first_name = data.get('first_name') or user.first_name
+  user.last_name = data.get('last_name') or user.last_name
+  user.username = data.get('last_name') or user.username
+  user.email = data.get('email') or user.email
+
+  if data.get('password') and data['password'] != '':
+    user.password = make_password(data['password'])
+
+  user.save()
+
+  user = UserSerializer(user, many=False)
+  return Response(serializer.data)
+
+
